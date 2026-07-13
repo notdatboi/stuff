@@ -1,0 +1,3 @@
+cmake -B build -DCMAKE_INSTALL_PREFIX=$PWD/install
+cmake --build build
+cmake --install build
