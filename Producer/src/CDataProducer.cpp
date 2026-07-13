@@ -43,4 +43,22 @@ void CDataProducer::process(Utility::IPC::Data& data)
     ++m_seqn;
 }
 
+void CDataProducer::processDebug(Utility::IPC::Data& data)
+{
+    process(data);
+    auto const random_n = m_rdist(m_reng);
+    if (random_n % 3 == 0)
+    {
+        data.metadata.checksum = random_n;
+    }
+    else if (random_n % 5 == 0)
+    {
+        data.metadata.seqn = random_n;
+    }
+    else if (random_n % 8 == 0)
+    {
+        data.metadata.ts = random_n;
+    }
+}
+
 }

@@ -36,7 +36,9 @@ void CApplication::run()
         << "\t\t`x` to exit" << std::endl
         << "\t\t`<number>` to set payload size (1 to uint32_t max)" << std::endl
         << "\t\t`p` to pause" << std::endl
-        << "\t\t`u` to unpause" << std::endl;
+        << "\t\t`u` to unpause" << std::endl
+        << "\t\t`d` to enter debug mode (chance of invalid packets)" << std::endl
+        << "\t\t`r` to exit debug mode" << std::endl;
 
     std::thread worker{[this]{ processData(); }};
     while (true)
@@ -56,6 +58,14 @@ void CApplication::run()
         else if (user_input == "u")
         {
             m_pause.store(false);
+        }
+        else if (user_input == "d")
+        {
+            m_debug.store(true);
+        }
+        else if (user_input == "r")
+        {
+            m_debug.store(false);
         }
         else
         {
@@ -87,6 +97,10 @@ void CApplication::processData()
     {
         producer.process(data);
     };
+    auto debug_writer = [&producer](Utility::IPC::Data& data)
+    {
+        producer.processDebug(data);
+    };
 
     while (!m_stop.load())
     {
@@ -98,7 +112,14 @@ void CApplication::processData()
         {
             auto const payload_size = m_payload_size.load();
             producer.setSize(payload_size);
-            sender.timed_send(m_data_send_timeout, writer, payload_size);
+            if (m_debug.load())
+            {
+                sender.timed_send(m_data_send_timeout, debug_writer, payload_size);
+            }
+            else
+            {
+                sender.timed_send(m_data_send_timeout, writer, payload_size);
+            }
             if (m_throttle != std::chrono::milliseconds::zero())
             {
                 std::this_thread::sleep_for(m_throttle);
