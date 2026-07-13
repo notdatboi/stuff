@@ -8,6 +8,7 @@ project(Consumer)
 file(GLOB_RECURSE SOURCES src/*.cpp include/Consumer/*.hpp include/Consumer/Private/*.inl)
 add_executable(consumer ${SOURCES})
 
+target_compile_options(consumer PRIVATE -O3)
 target_link_libraries(consumer PRIVATE utility_lib)
 target_include_directories(consumer PRIVATE include)
 

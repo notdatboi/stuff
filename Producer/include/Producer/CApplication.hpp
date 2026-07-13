@@ -14,7 +14,7 @@ namespace Producer
 class CApplication
 {
 public:
-    CApplication(std::chrono::milliseconds throttle = std::chrono::milliseconds{1000u});
+    CApplication(std::chrono::milliseconds throttle = std::chrono::milliseconds::zero());
     ~CApplication();
 
     void run();

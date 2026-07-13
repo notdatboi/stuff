@@ -6,11 +6,11 @@
 #include <syncstream>
 
 #include <Utility/TTimestamp.hpp>
+#include <Utility/CChecksum.hpp>
 
 namespace Utility
 {
 
-using CChecksum = std::hash<std::string_view>;
 using CTimestamp = TTimestamp<std::chrono::steady_clock>;
 
 std::osyncstream out();

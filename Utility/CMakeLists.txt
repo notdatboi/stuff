@@ -8,5 +8,5 @@ project(Utility)
 file(GLOB_RECURSE SOURCES src/*.cpp src/IPC/*.cpp include/Utility/*.hpp include/Utility/IPC/*.hpp include/Utility/Private/*.inl)
 add_library(utility_lib STATIC ${SOURCES})
 
+target_compile_options(utility_lib PRIVATE -O3)
 target_include_directories(utility_lib PUBLIC include)
-#install(TARGETS utility_lib DESTINATION lib)

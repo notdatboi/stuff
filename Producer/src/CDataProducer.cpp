@@ -1,13 +1,14 @@
 #include <Producer/CDataProducer.hpp>
 
 #include <cstdlib>
+#include <execution>
 
 namespace Producer
 {
 
 CDataProducer::CDataProducer()
     : m_reng{std::random_device{}()}
-    , m_rdist{32, 127} // ascii
+    , m_rdist{0, 100}
     , m_seqn{0u}
     , m_size{1u}
 {
@@ -30,16 +31,15 @@ void CDataProducer::process(Utility::IPC::Data& data)
     data.metadata.seqn = m_seqn;
     data.metadata.data_size = m_size;
 
-    for (std::size_t i = 0; i < m_size; ++i)
-    {
-        data.payload[i] = m_rdist(m_reng);
-    }
+    std::for_each(std::execution::par, data.payload.begin(), data.payload.end(), [](char& e) {
+        thread_local std::random_device rd;
+        thread_local std::default_random_engine reng{rd()};
+        thread_local std::uniform_int_distribution rdist{32, 127}; // ascii
+        e = rdist(reng);
+    });
     std::string_view payload_sv{data.payload.data(), data.payload.size()}; // can't hash spans easily
     data.metadata.checksum = Utility::CChecksum{}(payload_sv);
     data.metadata.ts = Utility::CTimestamp::now();
-    Utility::out()
-        << "PACKET METADATA: [" << data.metadata.ts << "|" << data.metadata.seqn << "|" << data.metadata.checksum << "|" << data.metadata.data_size << "] "
-        << "DATA: [" << payload_sv << "]" << std::endl;
     ++m_seqn;
 }
 
