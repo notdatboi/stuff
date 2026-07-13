@@ -23,11 +23,11 @@ struct Data
     Payload payload;
 };
 
-constexpr char c_data_shm_name[] = "/test_task_data_shm_0";
-constexpr char c_data_produced_sem_name[] = "/test_task_sem_prod_14";
-constexpr char c_data_consumed_sem_name[] = "/test_task_sem_cons_14";
+constexpr char c_data_shm_name[] = "/test_task_data_shared_memory";
+constexpr char c_data_produced_sem_name[] = "/test_task_semaphore_producer";
+constexpr char c_data_consumed_sem_name[] = "/test_task_semaphore_consumer";
 
-constexpr int c_data_access = 0666;
+constexpr int c_data_access = 0666; ///< free-for-all
 
 }
 }
