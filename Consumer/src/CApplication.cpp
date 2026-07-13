@@ -8,10 +8,18 @@
 
 namespace Consumer
 {
+namespace
+{
+
+static const std::chrono::milliseconds c_ui_sleep_ms{100u};
+static const std::chrono::milliseconds c_worker_pause_sleep_ms{1u};
+
+}
 
 CApplication::CApplication()
     : m_data_receive_timeout{3u}
     , m_stop{false}
+    , m_pause{false}
 {
 }
 
@@ -19,7 +27,11 @@ CApplication::~CApplication() = default;
 
 void CApplication::run()
 {
-    Utility::out() << "Press `x` and Enter to exit" << std::endl;
+    Utility::out() << "Press Enter after operation to confirm." << std::endl
+        << "\tAvailable operations:" << std::endl
+        << "\t\t`x` to exit" << std::endl
+        << "\t\t`p` to pause" << std::endl
+        << "\t\t`u` to unpause" << std::endl;
 
     std::thread worker{[this]{ processData(); }};
     while (true)
@@ -32,7 +44,15 @@ void CApplication::run()
             worker.join();
             break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+        else if (user_input == "p")
+        {
+            m_pause.store(true);
+        }
+        else if (user_input == "u")
+        {
+            m_pause.store(false);
+        }
+        std::this_thread::sleep_for(c_ui_sleep_ms);
     }
 }
 
@@ -47,7 +67,14 @@ void CApplication::processData()
 
     while (!m_stop.load())
     {
-        receiver.timed_receive(m_data_receive_timeout, reader);
+        if (m_pause.load())
+        {
+            std::this_thread::sleep_for(c_worker_pause_sleep_ms);
+        }
+        else
+        {
+            receiver.timed_receive(m_data_receive_timeout, reader);
+        }
     }
 }
 
