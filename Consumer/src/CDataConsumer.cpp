@@ -14,6 +14,8 @@ static const std::size_t c_invalid_seqn{std::numeric_limits<std::size_t>::max()}
 
 CDataConsumer::CDataConsumer()
     : m_prev_seqn{c_invalid_seqn}
+    , m_statistics{0u, 0u, 0u, {}}
+    , m_bps_tracker_data{Clock::now(), 0u}
 {
 }
 
@@ -21,12 +23,18 @@ CDataConsumer::~CDataConsumer() = default;
 
 void CDataConsumer::process(Utility::IPC::Data const& data)
 {
-    Utility::out()
-        << "PACKET METADATA: [" << data.metadata.ts << "|" << data.metadata.seqn << "|" << data.metadata.checksum << "|" << data.metadata.data_size << "]" << std::endl
-        << "DATA: [" << std::string_view{data.payload.data(), data.payload.size()} << "] " << std::endl;
-
+    // process stuff + calc error statistics
     validate(data);
     m_prev_seqn = data.metadata.seqn;
+
+    // calc statistics
+    trackTotalPacketCount();
+    trackBytesAndPacketsPerSecond(sizeof(Utility::IPC::Metadata) + data.payload.size());
+}
+
+CDataConsumer::Statistics CDataConsumer::getStatistics()
+{
+    return m_statistics;
 }
 
 void CDataConsumer::validate(Utility::IPC::Data const& data)
@@ -51,7 +59,47 @@ void CDataConsumer::validate(Utility::IPC::Data const& data)
         err |= EPacketError::ChecksumMismatch;
     }
 
-    Utility::out() << "PACKET VALIDATION RESULT: 0x" << std::hex << std::fixed << static_cast<std::size_t>(err) << std::endl;
+    trackErrorsByType(err);
+}
+
+void CDataConsumer::trackTotalPacketCount()
+{
+    ++m_statistics.total_packet_count;
+}
+
+void CDataConsumer::trackBytesAndPacketsPerSecond(std::size_t data_size)
+{
+    m_bps_tracker_data.accumulated_bytes += data_size;
+    ++m_bps_tracker_data.accumulated_packets;
+    auto const now = Clock::now();
+    // seconds but double
+    auto const elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - m_bps_tracker_data.last_update).count();
+    if (elapsed >= 1.0)
+    {
+        m_statistics.bytes_per_second = static_cast<std::size_t>(m_bps_tracker_data.accumulated_bytes / elapsed);
+        m_statistics.packets_per_second = static_cast<std::size_t>(m_bps_tracker_data.accumulated_packets / elapsed);
+        m_bps_tracker_data.last_update = now;
+        m_bps_tracker_data.accumulated_bytes = 0u;
+        m_bps_tracker_data.accumulated_packets = 0u;
+    }
+}
+
+void CDataConsumer::trackErrorsByType(EPacketError validation_result)
+{
+    if (validation_result == EPacketError::NoError)
+    {
+        return;
+    }
+    auto check_and_populate_error = [this, validation_result](EPacketError error_to_check)
+    {
+        if (static_cast<bool>(validation_result & error_to_check))
+        {
+            ++m_statistics.errors_by_type[error_to_check];
+        }
+    };
+    check_and_populate_error(EPacketError::InvalidTimestamp);
+    check_and_populate_error(EPacketError::SequenceInconsistency);
+    check_and_populate_error(EPacketError::ChecksumMismatch);
 }
 
 }

@@ -8,6 +8,7 @@ project(Producer)
 file(GLOB_RECURSE SOURCES src/*.cpp include/Producer/*.hpp include/Producer/Private/*.inl)
 add_executable(producer ${SOURCES})
 
+target_compile_options(producer PRIVATE -O3)
 target_link_libraries(producer PRIVATE utility_lib)
 target_include_directories(producer PRIVATE include)
 
