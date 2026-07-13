@@ -4,6 +4,7 @@
 #include <random>
 
 #include <Utility/IPC/Common.hpp>
+#include <Consumer/EPacketError.hpp>
 
 namespace Consumer
 {
@@ -19,6 +20,10 @@ public:
     void process(Utility::IPC::Data const& data);
 
 private:
+    void validate(Utility::IPC::Data const& data);
+
+private:
+    std::size_t m_prev_seqn;
 };
 
 }

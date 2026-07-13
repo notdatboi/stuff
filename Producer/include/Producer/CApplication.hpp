@@ -27,6 +27,7 @@ private:
     std::chrono::seconds m_data_send_timeout;
     std::atomic_bool m_stop;
     std::atomic_bool m_pause;
+    std::atomic_bool m_debug;
     std::atomic_size_t m_payload_size;
 };
 

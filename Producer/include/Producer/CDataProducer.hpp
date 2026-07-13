@@ -17,6 +17,7 @@ public:
     void setSize(std::size_t size);
     std::size_t getSize() const;
     void process(Utility::IPC::Data& data);
+    void processDebug(Utility::IPC::Data& data);
 
 private:
     std::default_random_engine m_reng;

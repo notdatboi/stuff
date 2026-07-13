@@ -11,6 +11,7 @@ public:
 
 public:
     static rep now();
+    static bool isInFrameAroundNow(rep ts, std::chrono::milliseconds half_frame);
 };
 
 }
