@@ -25,6 +25,7 @@ private:
 private:
     std::chrono::seconds m_data_receive_timeout;
     std::atomic_bool m_stop;
+    std::atomic_bool m_pause;
 };
 
 }
